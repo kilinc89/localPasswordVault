@@ -77,10 +77,10 @@ public enum Strength: Int, Comparable, Sendable {
 
     public var label: String {
         switch self {
-        case .weak: return "Zayıf"
-        case .fair: return "Orta"
-        case .strong: return "Güçlü"
-        case .veryStrong: return "Çok güçlü"
+        case .weak: return L("Zayıf", "Weak")
+        case .fair: return L("Orta", "Fair")
+        case .strong: return L("Güçlü", "Strong")
+        case .veryStrong: return L("Çok güçlü", "Very strong")
         }
     }
 }

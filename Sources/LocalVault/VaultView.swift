@@ -16,26 +16,26 @@ struct VaultView: View {
         NavigationSplitView {
             List(filtered, selection: $selection) { entry in
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(entry.title.isEmpty ? "(başlıksız)" : entry.title).font(.headline)
+                    Text(entry.title.isEmpty ? L("(başlıksız)", "(untitled)") : entry.title).font(.headline)
                     if !entry.username.isEmpty {
                         Text(entry.username).font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .tag(entry.id)
                 .contextMenu {
-                    Button("Kullanıcı adını kopyala") { state.copy(entry.username, label: "Kullanıcı adı") }
-                    Button("Parolayı kopyala") { state.copy(entry.password, label: "Parola") }
+                    Button(L("Kullanıcı adını kopyala", "Copy username")) { state.copy(entry.username, label: L("Kullanıcı adı", "Username")) }
+                    Button(L("Parolayı kopyala", "Copy password")) { state.copy(entry.password, label: L("Parola", "Password")) }
                     Divider()
-                    Button("Düzenle") { editing = entry }
-                    Button("Sil", role: .destructive) { pendingDelete = entry }
+                    Button(L("Düzenle", "Edit")) { editing = entry }
+                    Button(L("Sil", "Delete"), role: .destructive) { pendingDelete = entry }
                 }
             }
-            .searchable(text: $search, placement: .sidebar, prompt: "Ara")
+            .searchable(text: $search, placement: .sidebar, prompt: L("Ara", "Search"))
             .overlay {
                 if filtered.isEmpty {
-                    ContentUnavailableView(search.isEmpty ? "Henüz kayıt yok" : "Sonuç yok",
+                    ContentUnavailableView(search.isEmpty ? L("Henüz kayıt yok", "No entries yet") : L("Sonuç yok", "No results"),
                                            systemImage: search.isEmpty ? "key" : "magnifyingglass",
-                                           description: Text(search.isEmpty ? "＋ ile ilk parolanızı ekleyin." : ""))
+                                           description: Text(search.isEmpty ? L("＋ ile ilk parolanızı ekleyin.", "Add your first password with ＋.") : ""))
                 }
             }
             .navigationSplitViewColumnWidth(min: 220, ideal: 260)
@@ -43,20 +43,21 @@ struct VaultView: View {
             if let id = selection, let entry = state.entries.first(where: { $0.id == id }) {
                 EntryDetailView(entry: entry, onEdit: { editing = entry }, onDelete: { pendingDelete = entry })
             } else {
-                ContentUnavailableView("Bir kayıt seçin", systemImage: "lock.open")
+                ContentUnavailableView(L("Bir kayıt seçin", "Select an entry"), systemImage: "lock.open")
             }
         }
         .toolbar {
             ToolbarItemGroup {
-                Button { editing = Entry() } label: { Label("Yeni kayıt", systemImage: "plus") }
+                Button { editing = Entry() } label: { Label(L("Yeni kayıt", "New entry"), systemImage: "plus") }
                     .keyboardShortcut("n", modifiers: .command)
-                Button { showGenerator = true } label: { Label("Parola üretici", systemImage: "wand.and.stars") }
+                Button { showGenerator = true } label: { Label(L("Parola üretici", "Password generator"), systemImage: "wand.and.stars") }
                     .keyboardShortcut("g", modifiers: .command)
                 Menu {
-                    Button("Ana parolayı değiştir…") { showChangePassword = true }
-                    Button("Şifreli yedeği dışa aktar…") { state.exportBackup() }
-                } label: { Label("Ayarlar", systemImage: "gearshape") }
-                Button { state.lock() } label: { Label("Kilitle", systemImage: "lock") }
+                    Button(L("Ana parolayı değiştir…", "Change master password…")) { showChangePassword = true }
+                    Button(L("Şifreli yedeği dışa aktar…", "Export encrypted backup…")) { state.exportBackup() }
+                    LanguagePicker(state: state)
+                } label: { Label(L("Ayarlar", "Settings"), systemImage: "gearshape") }
+                Button { state.lock() } label: { Label(L("Kilitle", "Lock"), systemImage: "lock") }
             }
         }
         .sheet(item: $editing) { entry in
@@ -71,19 +72,19 @@ struct VaultView: View {
         .sheet(isPresented: $showChangePassword) {
             ChangePasswordView()
         }
-        .confirmationDialog("“\(pendingDelete?.title ?? "")” silinsin mi?",
+        .confirmationDialog(L("“\(pendingDelete?.title ?? "")” silinsin mi?", "Delete “\(pendingDelete?.title ?? "")”?"),
                             isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })) {
-            Button("Sil", role: .destructive) {
+            Button(L("Sil", "Delete"), role: .destructive) {
                 if let e = pendingDelete {
                     state.delete(e.id)
                     if selection == e.id { selection = nil }
                 }
                 pendingDelete = nil
             }
-        } message: { Text("Bu işlem geri alınamaz.") }
-        .alert("Hata", isPresented: Binding(get: { state.errorMessage != nil },
+        } message: { Text(L("Bu işlem geri alınamaz.", "This cannot be undone.")) }
+        .alert(L("Hata", "Error"), isPresented: Binding(get: { state.errorMessage != nil },
                                             set: { if !$0 { state.errorMessage = nil } })) {
-            Button("Tamam") {}
+            Button(L("Tamam", "OK")) {}
         } message: { Text(state.errorMessage ?? "") }
     }
 }
@@ -98,10 +99,10 @@ struct EntryDetailView: View {
     var body: some View {
         Form {
             Section {
-                row("Kullanıcı adı", entry.username) {
-                    state.copy(entry.username, label: "Kullanıcı adı")
+                row(L("Kullanıcı adı", "Username"), entry.username) {
+                    state.copy(entry.username, label: L("Kullanıcı adı", "Username"))
                 }
-                LabeledContent("Parola") {
+                LabeledContent(L("Parola", "Password")) {
                     HStack {
                         Text(reveal ? entry.password : String(repeating: "•", count: min(entry.password.count, 16)))
                             .font(.body.monospaced())
@@ -109,10 +110,10 @@ struct EntryDetailView: View {
                         Spacer()
                         Button { reveal.toggle() } label: {
                             Image(systemName: reveal ? "eye.slash" : "eye")
-                        }.help(reveal ? "Gizle" : "Göster")
-                        Button { state.copy(entry.password, label: "Parola") } label: {
+                        }.help(reveal ? L("Gizle", "Hide") : L("Göster", "Show"))
+                        Button { state.copy(entry.password, label: L("Parola", "Password")) } label: {
                             Image(systemName: "doc.on.doc")
-                        }.help("Kopyala")
+                        }.help(L("Kopyala", "Copy"))
                     }.buttonStyle(.borderless)
                 }
                 StrengthBar(password: entry.password)
@@ -127,22 +128,26 @@ struct EntryDetailView: View {
                 }
             }
             if !entry.notes.isEmpty {
-                Section("Notlar") { Text(entry.notes).textSelection(.enabled) }
+                Section(L("Notlar", "Notes")) { Text(entry.notes).textSelection(.enabled) }
             }
             Section {
-                LabeledContent("Oluşturuldu", value: entry.createdAt.formatted(date: .abbreviated, time: .shortened))
-                LabeledContent("Güncellendi", value: entry.updatedAt.formatted(date: .abbreviated, time: .shortened))
+                LabeledContent(L("Oluşturuldu", "Created"), value: entry.createdAt.formatted(dateStyle))
+                LabeledContent(L("Güncellendi", "Updated"), value: entry.updatedAt.formatted(dateStyle))
             }
         }
         .formStyle(.grouped)
         .navigationTitle(entry.title)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Button("Düzenle", action: onEdit)
-                Button(role: .destructive, action: onDelete) { Label("Sil", systemImage: "trash") }
+                Button(L("Düzenle", "Edit"), action: onEdit)
+                Button(role: .destructive, action: onDelete) { Label(L("Sil", "Delete"), systemImage: "trash") }
             }
         }
         .onChange(of: entry.id) { reveal = false }
+    }
+
+    private var dateStyle: Date.FormatStyle {
+        Date.FormatStyle(date: .abbreviated, time: .shortened, locale: state.language.locale)
     }
 
     private func row(_ label: String, _ value: String, copy: @escaping () -> Void) -> some View {
@@ -152,7 +157,7 @@ struct EntryDetailView: View {
                 Spacer()
                 if !value.isEmpty {
                     Button(action: copy) { Image(systemName: "doc.on.doc") }
-                        .buttonStyle(.borderless).help("Kopyala")
+                        .buttonStyle(.borderless).help(L("Kopyala", "Copy"))
                 }
             }
         }
@@ -169,17 +174,17 @@ struct EntryEditorView: View {
     var body: some View {
         VStack(spacing: 0) {
             Form {
-                TextField("Başlık", text: $entry.title)
-                TextField("Kullanıcı adı / e-posta", text: $entry.username)
+                TextField(L("Başlık", "Title"), text: $entry.title)
+                TextField(L("Kullanıcı adı / e-posta", "Username / email"), text: $entry.username)
                 HStack {
                     Group {
-                        if reveal { TextField("Parola", text: $entry.password) }
-                        else { SecureField("Parola", text: $entry.password) }
+                        if reveal { TextField(L("Parola", "Password"), text: $entry.password) }
+                        else { SecureField(L("Parola", "Password"), text: $entry.password) }
                     }.font(.body.monospaced())
                     Button { reveal.toggle() } label: { Image(systemName: reveal ? "eye.slash" : "eye") }
                         .buttonStyle(.borderless)
                     Button { showGenerator.toggle() } label: { Image(systemName: "wand.and.stars") }
-                        .buttonStyle(.borderless).help("Parola üret")
+                        .buttonStyle(.borderless).help(L("Parola üret", "Generate password"))
                         .popover(isPresented: $showGenerator) {
                             GeneratorPanel { entry.password = $0; reveal = true; showGenerator = false }
                                 .padding().frame(width: 380)
@@ -187,13 +192,13 @@ struct EntryEditorView: View {
                 }
                 StrengthBar(password: entry.password)
                 TextField("URL", text: $entry.url)
-                TextField("Notlar", text: $entry.notes, axis: .vertical).lineLimit(3...8)
+                TextField(L("Notlar", "Notes"), text: $entry.notes, axis: .vertical).lineLimit(3...8)
             }
             .formStyle(.grouped)
             HStack {
                 Spacer()
-                Button("Vazgeç", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Kaydet") { onSave(entry); dismiss() }
+                Button(L("Vazgeç", "Cancel"), role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button(L("Kaydet", "Save")) { onSave(entry); dismiss() }
                     .keyboardShortcut(.defaultAction)
                     .disabled(entry.title.trimmingCharacters(in: .whitespaces).isEmpty)
             }.padding()

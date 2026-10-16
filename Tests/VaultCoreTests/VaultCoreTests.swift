@@ -174,4 +174,17 @@ final class VaultCoreTests: XCTestCase {
         XCTAssertTrue(e.matches("IBRA"))
         XCTAssertFalse(e.matches("gitlab"))
     }
+
+    func testLanguageSwitch() {
+        let saved = UserDefaults.standard.string(forKey: AppLanguage.defaultsKey)
+        defer { UserDefaults.standard.set(saved, forKey: AppLanguage.defaultsKey) }
+
+        AppLanguage.current = .english
+        XCTAssertEqual(VaultError.wrongPassword.errorDescription, "Incorrect master password.")
+        XCTAssertEqual(Strength.weak.label, "Weak")
+
+        AppLanguage.current = .turkish
+        XCTAssertEqual(VaultError.wrongPassword.errorDescription, "Ana parola yanlış.")
+        XCTAssertEqual(Strength.weak.label, "Zayıf")
+    }
 }

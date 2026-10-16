@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import VaultCore
 
 @main
 struct LocalVaultApp: App {
@@ -14,10 +15,12 @@ struct LocalVaultApp: App {
         }
         .commands {
             CommandGroup(replacing: .newItem) {}
-            CommandMenu("Kasa") {
-                Button("Kilitle") { state.lock() }
+            CommandMenu(L("Kasa", "Vault")) {
+                Button(L("Kilitle", "Lock")) { state.lock() }
                     .keyboardShortcut("l", modifiers: .command)
                     .disabled(state.phase != .unlocked)
+                Divider()
+                LanguagePicker(state: state)
             }
         }
     }
@@ -58,5 +61,20 @@ struct RootView: View {
             }
         }
         .animation(.default, value: state.toast)
+        // Strings are resolved when views are built, so rebuild the tree when the language changes.
+        .id(state.language)
+        .environment(\.locale, state.language.locale)
+    }
+}
+
+/// Language submenu, used in the Settings toolbar menu and the Vault menu bar menu.
+struct LanguagePicker: View {
+    @ObservedObject var state: AppState
+
+    var body: some View {
+        Picker(L("Dil", "Language"), selection: $state.language) {
+            ForEach(AppLanguage.allCases) { Text($0.displayName).tag($0) }
+        }
+        .pickerStyle(.menu)
     }
 }

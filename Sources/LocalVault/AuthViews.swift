@@ -7,13 +7,14 @@ struct SetupView: View {
     @State private var confirm = ""
 
     var body: some View {
-        AuthCard(icon: "lock.shield", title: "LocalVault'a hoş geldiniz",
-                 subtitle: "Kasanızı korumak için bir ana parola belirleyin. Bu parola kurtarılamaz — unutmayın.") {
-            SecureField("Ana parola (en az 8 karakter)", text: $password)
-            SecureField("Ana parolayı tekrar girin", text: $confirm)
+        AuthCard(icon: "lock.shield", title: L("LocalVault'a hoş geldiniz", "Welcome to LocalVault"),
+                 subtitle: L("Kasanızı korumak için bir ana parola belirleyin. Bu parola kurtarılamaz — unutmayın.",
+                             "Choose a master password to protect your vault. It cannot be recovered — don't forget it.")) {
+            SecureField(L("Ana parola (en az 8 karakter)", "Master password (at least 8 characters)"), text: $password)
+            SecureField(L("Ana parolayı tekrar girin", "Re-enter master password"), text: $confirm)
                 .onSubmit(create)
             StrengthBar(password: password)
-            Button("Kasa oluştur", action: create)
+            Button(L("Kasa oluştur", "Create vault"), action: create)
                 .keyboardShortcut(.defaultAction)
                 .disabled(password.count < VaultStore.minimumPasswordLength || confirm.isEmpty)
         }
@@ -29,11 +30,12 @@ struct UnlockView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        AuthCard(icon: "lock.fill", title: "Kasa kilitli", subtitle: "Devam etmek için ana parolanızı girin.") {
-            SecureField("Ana parola", text: $password)
+        AuthCard(icon: "lock.fill", title: L("Kasa kilitli", "Vault locked"),
+                 subtitle: L("Devam etmek için ana parolanızı girin.", "Enter your master password to continue.")) {
+            SecureField(L("Ana parola", "Master password"), text: $password)
                 .focused($focused)
                 .onSubmit(unlock)
-            Button(busy ? "Açılıyor…" : "Kilidi aç", action: unlock)
+            Button(busy ? L("Açılıyor…", "Unlocking…") : L("Kilidi aç", "Unlock"), action: unlock)
                 .keyboardShortcut(.defaultAction)
                 .disabled(password.isEmpty || busy)
         }

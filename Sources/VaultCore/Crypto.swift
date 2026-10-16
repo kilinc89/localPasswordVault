@@ -13,13 +13,13 @@ public enum VaultError: Error, Equatable, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .wrongPassword: return "Ana parola yanlış."
-        case .corruptFile: return "Kasa dosyası okunamadı veya bozuk."
-        case .keyDerivationFailed: return "Anahtar türetilemedi."
-        case .randomFailed: return "Güvenli rastgele sayı üretilemedi."
-        case .passwordTooShort: return "Ana parola en az 8 karakter olmalı."
-        case .vaultExists: return "Kasa zaten mevcut."
-        case .vaultMissing: return "Kasa bulunamadı."
+        case .wrongPassword: return L("Ana parola yanlış.", "Incorrect master password.")
+        case .corruptFile: return L("Kasa dosyası okunamadı veya bozuk.", "The vault file could not be read or is corrupt.")
+        case .keyDerivationFailed: return L("Anahtar türetilemedi.", "Key derivation failed.")
+        case .randomFailed: return L("Güvenli rastgele sayı üretilemedi.", "Could not generate secure random bytes.")
+        case .passwordTooShort: return L("Ana parola en az 8 karakter olmalı.", "The master password must be at least 8 characters.")
+        case .vaultExists: return L("Kasa zaten mevcut.", "A vault already exists.")
+        case .vaultMissing: return L("Kasa bulunamadı.", "Vault not found.")
         }
     }
 }

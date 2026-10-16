@@ -1,7 +1,7 @@
 import SwiftUI
 import VaultCore
 
-/// Reusable generator controls. `onUse` is shown as a "Kullan" button when provided.
+/// Reusable generator controls. `onUse` is shown as a "Use" button when provided.
 struct GeneratorPanel: View {
     @EnvironmentObject var state: AppState
     @State private var options = GeneratorOptions()
@@ -17,25 +17,25 @@ struct GeneratorPanel: View {
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Button { regenerate() } label: { Image(systemName: "arrow.clockwise") }
-                    .buttonStyle(.borderless).help("Yeniden üret")
+                    .buttonStyle(.borderless).help(L("Yeniden üret", "Regenerate"))
             }
             StrengthBar(password: password)
             HStack {
-                Text("Uzunluk: \(options.length)").monospacedDigit().frame(width: 100, alignment: .leading)
+                Text(L("Uzunluk: \(options.length)", "Length: \(options.length)")).monospacedDigit().frame(width: 100, alignment: .leading)
                 Slider(value: Binding(get: { Double(options.length) },
                                       set: { options.length = Int($0) }),
                        in: Double(GeneratorOptions.lengthRange.lowerBound)...Double(GeneratorOptions.lengthRange.upperBound),
                        step: 1)
             }
-            Toggle("Büyük harf (A-Z)", isOn: $options.uppercase)
-            Toggle("Küçük harf (a-z)", isOn: $options.lowercase)
-            Toggle("Rakam (0-9)", isOn: $options.digits)
-            Toggle("Sembol (!@#…)", isOn: $options.symbols)
-            Toggle("Karışabilen karakterleri hariç tut (0 O l 1 I)", isOn: $options.excludeAmbiguous)
+            Toggle(L("Büyük harf (A-Z)", "Uppercase (A-Z)"), isOn: $options.uppercase)
+            Toggle(L("Küçük harf (a-z)", "Lowercase (a-z)"), isOn: $options.lowercase)
+            Toggle(L("Rakam (0-9)", "Digits (0-9)"), isOn: $options.digits)
+            Toggle(L("Sembol (!@#…)", "Symbols (!@#…)"), isOn: $options.symbols)
+            Toggle(L("Karışabilen karakterleri hariç tut (0 O l 1 I)", "Exclude ambiguous characters (0 O l 1 I)"), isOn: $options.excludeAmbiguous)
             HStack {
                 Spacer()
-                Button("Kopyala") { state.copy(password, label: "Parola") }
-                if let onUse { Button("Kullan") { onUse(password) }.keyboardShortcut(.defaultAction) }
+                Button(L("Kopyala", "Copy")) { state.copy(password, label: L("Parola", "Password")) }
+                if let onUse { Button(L("Kullan", "Use")) { onUse(password) }.keyboardShortcut(.defaultAction) }
             }
         }
         .onAppear(perform: regenerate)
@@ -50,9 +50,9 @@ struct GeneratorSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Parola üretici").font(.title2.bold())
+            Text(L("Parola üretici", "Password generator")).font(.title2.bold())
             GeneratorPanel()
-            HStack { Spacer(); Button("Kapat") { dismiss() }.keyboardShortcut(.cancelAction) }
+            HStack { Spacer(); Button(L("Kapat", "Close")) { dismiss() }.keyboardShortcut(.cancelAction) }
         }
         .padding(24)
         .frame(width: 460)
@@ -68,18 +68,18 @@ struct ChangePasswordView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Ana parolayı değiştir").font(.title2.bold())
-            SecureField("Mevcut ana parola", text: $current)
-            SecureField("Yeni ana parola (en az 8 karakter)", text: $new)
-            SecureField("Yeni ana parola (tekrar)", text: $confirm)
+            Text(L("Ana parolayı değiştir", "Change master password")).font(.title2.bold())
+            SecureField(L("Mevcut ana parola", "Current master password"), text: $current)
+            SecureField(L("Yeni ana parola (en az 8 karakter)", "New master password (at least 8 characters)"), text: $new)
+            SecureField(L("Yeni ana parola (tekrar)", "New master password (again)"), text: $confirm)
             StrengthBar(password: new)
             if let error = state.errorMessage {
                 Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
             }
             HStack {
                 Spacer()
-                Button("Vazgeç") { state.errorMessage = nil; dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Değiştir") {
+                Button(L("Vazgeç", "Cancel")) { state.errorMessage = nil; dismiss() }.keyboardShortcut(.cancelAction)
+                Button(L("Değiştir", "Change")) {
                     if state.changePassword(current: current, new: new, confirm: confirm) { dismiss() }
                 }
                 .keyboardShortcut(.defaultAction)

@@ -10,6 +10,9 @@ final class AppState: ObservableObject {
     @Published var entries: [Entry] = []
     @Published var errorMessage: String?
     @Published var toast: String?
+    @Published var language = AppLanguage.current {
+        didSet { AppLanguage.current = language }
+    }
 
     let store: VaultStore
     let autoLockInterval: TimeInterval = 5 * 60
@@ -30,7 +33,7 @@ final class AppState: ObservableObject {
     // MARK: F1 – create / unlock
 
     func createVault(password: String, confirm: String) {
-        guard password == confirm else { errorMessage = "Parolalar eşleşmiyor."; return }
+        guard password == confirm else { errorMessage = L("Parolalar eşleşmiyor.", "Passwords do not match."); return }
         run {
             self.vault = try self.store.create(password: password)
             self.entries = []
@@ -80,25 +83,25 @@ final class AppState: ObservableObject {
     // MARK: F11 / F12
 
     func changePassword(current: String, new: String, confirm: String) -> Bool {
-        guard new == confirm else { errorMessage = "Yeni parolalar eşleşmiyor."; return false }
+        guard new == confirm else { errorMessage = L("Yeni parolalar eşleşmiyor.", "New passwords do not match."); return false }
         var ok = false
         run {
             let (vault, _) = try self.store.changePassword(current: current, new: new)
             self.vault = vault
             ok = true
-            self.toast = "Ana parola değiştirildi."
+            self.toast = L("Ana parola değiştirildi.", "Master password changed.")
         }
         return ok
     }
 
     func exportBackup() {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "LocalVault-yedek-\(Self.dateStamp()).lvault"
+        panel.nameFieldStringValue = "LocalVault-\(L("yedek", "backup"))-\(Self.dateStamp()).lvault"
         panel.canCreateDirectories = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
         run {
             try self.store.exportBackup(to: url)
-            self.toast = "Şifreli yedek kaydedildi."
+            self.toast = L("Şifreli yedek kaydedildi.", "Encrypted backup saved.")
         }
     }
 
@@ -109,7 +112,8 @@ final class AppState: ObservableObject {
         pb.clearContents()
         pb.setString(value, forType: .string)
         let changeCount = pb.changeCount
-        toast = "\(label) kopyalandı — \(Int(clipboardClearDelay)) sn sonra temizlenecek."
+        toast = L("\(label) kopyalandı — \(Int(clipboardClearDelay)) sn sonra temizlenecek.",
+                  "\(label) copied — clipboard clears in \(Int(clipboardClearDelay)) s.")
         clipboardTask?.cancel()
         clipboardTask = Task { [clipboardClearDelay] in
             try? await Task.sleep(for: .seconds(clipboardClearDelay))

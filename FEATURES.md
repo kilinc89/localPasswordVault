@@ -20,6 +20,7 @@ Teknoloji: Swift 6 + SwiftUI + CryptoKit + CommonCrypto, Swift Package Manager i
 | F11 | **Ana parola değiştirme** | Mevcut parola doğrulanır, yeni salt ile yeniden şifrelenir. |
 | F12 | **Şifreli yedek dışa aktarma** | Kasa dosyası seçilen konuma kopyalanır (şifreli kalır). |
 | F13 | **DMG dağıtımı** | `scripts/build_dmg.sh` → `dist/LocalVault.dmg` (Applications kısayolu ile). |
+| F14 | **Türkçe / İngilizce arayüz** | İlk açılışta sistem diline göre seçilir; Ayarlar → Dil veya Kasa menüsünden anında değiştirilir, seçim hatırlanır. |
 
 ## Kapsam dışı (v1)
 Bulut senkronizasyonu, tarayıcı eklentisi, Touch ID, paylaşım, CSV içe aktarma.
