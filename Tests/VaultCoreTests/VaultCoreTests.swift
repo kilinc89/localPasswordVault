@@ -131,6 +131,41 @@ final class VaultCoreTests: XCTestCase {
         XCTAssertTrue(leftovers.isEmpty)
     }
 
+    func testReadBackupWithItsOwnPassword() throws {
+        let s = store()
+        let vault = try s.create(password: "correct horse")
+        try s.save(VaultPayload(entries: [Entry(title: "a")]), with: vault)
+        let dest = dir.appendingPathComponent("backup.lvault")
+        try s.exportBackup(to: dest)
+
+        let other = VaultStore(fileURL: dir.appendingPathComponent("other.lvault"), iterations: 1_000)
+        _ = try other.create(password: "different pass")
+        XCTAssertEqual(try other.readBackup(at: dest, password: "correct horse").entries.first?.title, "a")
+        XCTAssertThrowsError(try other.readBackup(at: dest, password: "different pass")) {
+            XCTAssertEqual($0 as? VaultError, .wrongPassword)
+        }
+    }
+
+    func testMergeKeepsNewestAndSkipsDuplicates() {
+        let old = Date(timeIntervalSince1970: 1_000)
+        let new = Date(timeIntervalSince1970: 2_000)
+        let shared = UUID(), stale = UUID()
+        let current = VaultPayload(entries: [
+            Entry(id: shared, title: "local old", updatedAt: old),
+            Entry(id: stale, title: "local new", updatedAt: new),
+            Entry(title: "only local"),
+        ])
+        let backup = VaultPayload(entries: [
+            Entry(id: shared, title: "backup new", updatedAt: new),
+            Entry(id: stale, title: "backup old", updatedAt: old),
+            Entry(title: "only local"),
+            Entry(title: "only backup"),
+        ])
+        let (merged, summary) = current.merging(backup)
+        XCTAssertEqual(summary, MergeSummary(added: 1, updated: 1, unchanged: 2))
+        XCTAssertEqual(Set(merged.entries.map(\.title)), ["backup new", "local new", "only local", "only backup"])
+    }
+
     func testGeneratorLengthAndClasses() {
         for len in [8, 20, 64] {
             let p = PasswordGenerator.generate(GeneratorOptions(length: len))

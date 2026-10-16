@@ -113,6 +113,11 @@ public struct VaultStore: Sendable {
         }
     }
 
+    /// Decrypts a backup file with the password it was exported under. The backup is never modified.
+    public func readBackup(at source: URL, password: String) throws -> VaultPayload {
+        try VaultStore(fileURL: source, iterations: iterations).unlock(password: password).1
+    }
+
     private func readFile() throws -> VaultFile {
         guard exists else { throw VaultError.vaultMissing }
         let data = try Data(contentsOf: fileURL)

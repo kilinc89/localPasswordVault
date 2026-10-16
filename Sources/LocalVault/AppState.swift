@@ -105,6 +105,55 @@ final class AppState: ObservableObject {
         }
     }
 
+    enum ImportMode { case merge, replace }
+
+    func chooseBackupFile() -> URL? {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.data]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        return panel.runModal() == .OK ? panel.url : nil
+    }
+
+    /// Imports a backup into the open vault. Entries are re-encrypted under the current master password.
+    func importBackup(from url: URL, password: String, mode: ImportMode) -> Bool {
+        guard let vault else { return false }
+        var ok = false
+        run {
+            let backup: VaultPayload
+            do {
+                backup = try self.store.readBackup(at: url, password: password)
+            } catch VaultError.wrongPassword {
+                throw ImportError.wrongBackupPassword
+            }
+            let current = VaultPayload(entries: self.entries)
+            let updated: VaultPayload
+            switch mode {
+            case .merge:
+                let (merged, s) = current.merging(backup)
+                updated = merged
+                self.toast = L("Yedek birleştirildi: \(s.added) yeni, \(s.updated) güncellendi, \(s.unchanged) aynı.",
+                               "Backup merged: \(s.added) added, \(s.updated) updated, \(s.unchanged) unchanged.")
+            case .replace:
+                updated = backup
+                self.toast = L("Kasa yedekle değiştirildi: \(backup.entries.count) kayıt.",
+                               "Vault replaced with backup: \(backup.entries.count) entries.")
+            }
+            try self.store.save(updated, with: vault)
+            self.entries = updated.entries.sorted(by: Self.order)
+            ok = true
+        }
+        return ok
+    }
+
+    private enum ImportError: LocalizedError {
+        case wrongBackupPassword
+        var errorDescription: String? {
+            L("Yedeğin parolası yanlış veya dosya bu kasaya ait değil.",
+              "Incorrect backup password, or the file is not a LocalVault backup.")
+        }
+    }
+
     // MARK: F8 – clipboard
 
     func copy(_ value: String, label: String) {

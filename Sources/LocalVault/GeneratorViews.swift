@@ -91,3 +91,62 @@ struct ChangePasswordView: View {
         .frame(width: 420)
     }
 }
+
+struct ImportBackupView: View {
+    @EnvironmentObject var state: AppState
+    @Environment(\.dismiss) private var dismiss
+    @State private var file: URL?
+    @State private var password = ""
+    @State private var mode = AppState.ImportMode.merge
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L("Şifreli yedeği içe aktar", "Import encrypted backup")).font(.title2.bold())
+            HStack {
+                Text(file?.lastPathComponent ?? L("Dosya seçilmedi", "No file selected"))
+                    .foregroundStyle(file == nil ? .secondary : .primary)
+                    .lineLimit(1).truncationMode(.middle)
+                Spacer()
+                Button(L("Dosya seç…", "Choose file…")) {
+                    if let url = state.chooseBackupFile() { file = url }
+                }
+            }
+            SecureField(L("Yedeğin ana parolası", "Backup's master password"), text: $password)
+            Picker(L("Yöntem", "Mode"), selection: $mode) {
+                Text(L("Birleştir", "Merge")).tag(AppState.ImportMode.merge)
+                Text(L("Kasanın yerine koy", "Replace vault")).tag(AppState.ImportMode.replace)
+            }
+            .pickerStyle(.radioGroup)
+            Group {
+                switch mode {
+                case .merge:
+                    Text(L("Yedekteki kayıtlar mevcut kayıtlara eklenir. Aynı kayıt iki tarafta da varsa en son güncellenen sürüm tutulur.",
+                           "Backup entries are added to your current ones. If an entry exists in both, the most recently updated version is kept."))
+                case .replace:
+                    Label(L("Mevcut tüm kayıtlar silinir ve yerine yedektekiler gelir.",
+                            "All current entries are removed and replaced with the backup's."),
+                          systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                }
+            }
+            .font(.callout)
+            .fixedSize(horizontal: false, vertical: true)
+            Text(L("Kayıtlar mevcut ana parolanızla şifrelenir.", "Entries are encrypted with your current master password."))
+                .font(.caption).foregroundStyle(.secondary)
+            if let error = state.errorMessage {
+                Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
+            }
+            HStack {
+                Spacer()
+                Button(L("Vazgeç", "Cancel")) { state.errorMessage = nil; dismiss() }.keyboardShortcut(.cancelAction)
+                Button(L("İçe aktar", "Import")) {
+                    if let file, state.importBackup(from: file, password: password, mode: mode) { dismiss() }
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(file == nil || password.isEmpty)
+            }
+        }
+        .textFieldStyle(.roundedBorder)
+        .padding(24)
+        .frame(width: 440)
+    }
+}

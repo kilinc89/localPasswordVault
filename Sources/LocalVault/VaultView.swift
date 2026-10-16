@@ -8,6 +8,7 @@ struct VaultView: View {
     @State private var editing: Entry?
     @State private var showGenerator = false
     @State private var showChangePassword = false
+    @State private var showImport = false
     @State private var pendingDelete: Entry?
 
     private var filtered: [Entry] { state.entries.filter { $0.matches(search) } }
@@ -55,6 +56,7 @@ struct VaultView: View {
                 Menu {
                     Button(L("Ana parolayı değiştir…", "Change master password…")) { showChangePassword = true }
                     Button(L("Şifreli yedeği dışa aktar…", "Export encrypted backup…")) { state.exportBackup() }
+                    Button(L("Şifreli yedeği içe aktar…", "Import encrypted backup…")) { showImport = true }
                     LanguagePicker(state: state)
                 } label: { Label(L("Ayarlar", "Settings"), systemImage: "gearshape") }
                 Button { state.lock() } label: { Label(L("Kilitle", "Lock"), systemImage: "lock") }
@@ -71,6 +73,9 @@ struct VaultView: View {
         }
         .sheet(isPresented: $showChangePassword) {
             ChangePasswordView()
+        }
+        .sheet(isPresented: $showImport) {
+            ImportBackupView()
         }
         .confirmationDialog(L("“\(pendingDelete?.title ?? "")” silinsin mi?", "Delete “\(pendingDelete?.title ?? "")”?"),
                             isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } })) {
