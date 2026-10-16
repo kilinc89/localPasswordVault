@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager / derleme çıktıları
+.build/
+build/
+dist/
+
+# Xcode kullanıcıya özel durum
+.swiftpm/xcode/xcuserdata/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+xcuserdata/
+
+# Kasa dosyaları (asla repoya girmemeli)
+*.lvault
+
+# Claude Code yerel ayarları
+.claude/
